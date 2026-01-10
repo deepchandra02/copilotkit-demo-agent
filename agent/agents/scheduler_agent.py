@@ -6,7 +6,8 @@ from typing import Dict, Any
 from langchain.tools import tool
 from langchain_core.runnables import RunnableConfig
 # from langchain_openai import AzureChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langgraph.types import Command
 from langgraph.graph import END
 from datetime import datetime
@@ -86,11 +87,12 @@ class SchedulerAgent:
         #     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         #     api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
         # )
-        model = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+        model = ChatOpenAI(
+            model=os.getenv("LOCAL_MODEL_NAME", "TheBloke/Mistral-7B-Instruct-v0.2-GGUF"),
             temperature=0.7,
-            max_output_tokens=2048,
-            google_api_key=os.getenv("GOOGLE_API_KEY")
+            max_tokens=2048,
+            base_url=os.getenv("OPENAI_BASE_URL", "http://localhost:1234/v1"),
+            api_key=os.getenv("OPENAI_API_KEY", "lm-studio")
         )
 
         # Create agent using LangChain's create_agent API
