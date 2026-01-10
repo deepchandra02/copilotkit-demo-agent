@@ -1,0 +1,15 @@
+{
+  "thread_id": "test-email",
+  "run_id": "run-001",
+  "state": {},
+  "messages": [
+    {
+      "id": "msg-001",
+      "role": "user",
+      "content": "Compose an email to john@example.com about the upcoming project meeting."
+    }
+  ],
+  "tools": [],
+  "context": [],
+  "forwarded_props": {}
+}
