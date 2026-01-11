@@ -109,6 +109,10 @@ class ResearchAgent:
     async def process(self, state: AgentState, config: RunnableConfig) -> Command[str]:
         """Process research and document analysis requests using the created agent."""
 
+        # Build new logs for this agent's work (don't reuse old logs)
+        new_logs = []
+        new_logs.append({"message": "🔍 Research agent processing request...", "done": False})
+
         # Invoke the agent with current state
         result = await self.agent.ainvoke(state, config)
 
@@ -120,10 +124,13 @@ class ResearchAgent:
             for msg in result["messages"]:
                 if hasattr(msg, "tool_calls") and msg.tool_calls:
                     for tool_call in msg.tool_calls:
+                        tool_name = tool_call.get("name", "unknown")
                         args = tool_call.get("args", {})
+                        new_logs.append({"message": f"Executing: {tool_name}", "done": True})
+
                         new_research.append(
                             {
-                                "tool": tool_call.get("name"),
+                                "tool": tool_name,
                                 "query": args.get("query", ""),
                                 "category": args.get("category", "general"),
                                 "timestamp": datetime.now().isoformat(),
@@ -131,10 +138,15 @@ class ResearchAgent:
                             }
                         )
 
+        # Mark research agent processing as complete
+        new_logs[0] = {"message": "🔍 Research agent processing request...", "done": True}
+        new_logs.append({"message": "✅ Research agent completed", "done": True})
+
         return Command(
             goto=END,
             update={
                 "messages": result.get("messages", []),
                 "research_results": new_research,
+                "logs": new_logs,
             },
         )

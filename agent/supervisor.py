@@ -98,6 +98,9 @@ class SupervisorAgent:
         agent_choice = self.extract_agent_choice(response.content)
         task_description = self.extract_task_from_message(state["messages"][-1])
 
+        # Add supervisor routing log
+        logs = [{"message": f"🎯 Routing to {agent_choice} agent", "done": True}]
+
         return Command(
             goto=f"{agent_choice}_node",
             update={
@@ -108,6 +111,7 @@ class SupervisorAgent:
                     "routed_to": agent_choice,
                     "timestamp": datetime.now().isoformat(),
                 },
+                "logs": logs,
             },
         )
 

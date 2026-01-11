@@ -17,3 +17,4 @@ class AgentState(CopilotKitState):
     recent_emails: List[Dict[str, Any]] = []
     research_results: List[Dict[str, Any]] = []
     conversation_context: Dict[str, Any] = {}
+    logs: List[Dict[str, Any]] = []

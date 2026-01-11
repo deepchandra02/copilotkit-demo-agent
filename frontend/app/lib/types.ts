@@ -18,4 +18,8 @@ export interface AgentState {
   }>;
   search_results?: Array<any>;
   proverbs?: string[];
+  logs?: Array<{
+    message: string;
+    done: boolean;
+  }>;
 }

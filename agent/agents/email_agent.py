@@ -101,6 +101,10 @@ class EmailAgent:
     async def process(self, state: AgentState, config: RunnableConfig) -> Command[str]:
         """Process email-related requests using the created agent."""
 
+        # Build new logs for this agent's work (don't reuse old logs)
+        new_logs = []
+        new_logs.append({"message": "📧 Email agent processing request...", "done": False})
+
         # Invoke the agent with current state
         result = await self.agent.ainvoke(state, config)
 
@@ -112,18 +116,26 @@ class EmailAgent:
             for msg in result["messages"]:
                 if hasattr(msg, "tool_calls") and msg.tool_calls:
                     for tool_call in msg.tool_calls:
+                        tool_name = tool_call.get("name", "unknown")
+                        new_logs.append({"message": f"Executing: {tool_name}", "done": True})
+
                         new_emails.append(
                             {
-                                "tool": tool_call.get("name"),
+                                "tool": tool_name,
                                 "args": tool_call.get("args", {}),
                                 "timestamp": "now",
                             }
                         )
+
+        # Mark email agent processing as complete
+        new_logs[0] = {"message": "📧 Email agent processing request...", "done": True}
+        new_logs.append({"message": "✅ Email agent completed", "done": True})
 
         return Command(
             goto=END,
             update={
                 "messages": result.get("messages", []),
                 "recent_emails": new_emails,
+                "logs": new_logs,
             },
         )

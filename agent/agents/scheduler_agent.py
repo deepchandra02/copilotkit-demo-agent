@@ -110,6 +110,10 @@ class SchedulerAgent:
     async def process(self, state: AgentState, config: RunnableConfig) -> Command[str]:
         """Process scheduling and calendar-related requests using the created agent."""
 
+        # Build new logs for this agent's work (don't reuse old logs)
+        new_logs = []
+        new_logs.append({"message": "📅 Scheduler agent processing request...", "done": False})
+
         # Invoke the agent with current state
         result = await self.agent.ainvoke(state, config)
 
@@ -121,7 +125,10 @@ class SchedulerAgent:
             for msg in result["messages"]:
                 if hasattr(msg, "tool_calls") and msg.tool_calls:
                     for tool_call in msg.tool_calls:
-                        if tool_call.get("name") == "create_event":
+                        tool_name = tool_call.get("name", "unknown")
+                        new_logs.append({"message": f"Executing: {tool_name}", "done": True})
+
+                        if tool_name == "create_event":
                             args = tool_call.get("args", {})
                             new_events.append(
                                 {
@@ -134,10 +141,15 @@ class SchedulerAgent:
                                 }
                             )
 
+        # Mark scheduler agent processing as complete
+        new_logs[0] = {"message": "📅 Scheduler agent processing request...", "done": True}
+        new_logs.append({"message": "✅ Scheduler agent completed", "done": True})
+
         return Command(
             goto=END,
             update={
                 "messages": result.get("messages", []),
                 "scheduled_events": new_events,
+                "logs": new_logs,
             },
         )
